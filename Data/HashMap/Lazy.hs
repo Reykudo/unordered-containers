@@ -101,6 +101,9 @@ module Data.HashMap.Lazy
     , fromList
     , fromListWith
     , fromListWithKey
+    , fromFoldable
+    , fromFoldableWith
+    , fromFoldableWithKey
 
       -- ** HashSets
     , HS.keysSet

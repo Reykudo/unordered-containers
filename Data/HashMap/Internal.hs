@@ -102,6 +102,9 @@ module Data.HashMap.Internal
     , fromList
     , fromListWith
     , fromListWithKey
+    , fromFoldable
+    , fromFoldableWith
+    , fromFoldableWithKey
 
       -- Internals used by the strict version
     , Hash
@@ -2097,8 +2100,12 @@ toList t = build (\ c z -> foldrWithKey (curry c) z t)
 -- | /O(n)/ Construct a map with the supplied mappings.  If the list
 -- contains duplicate mappings, the later mappings take precedence.
 fromList :: (Eq k, Hashable k) => [(k, v)] -> HashMap k v
-fromList = L.foldl' (\ m (k, v) -> unsafeInsert k v m) empty
+fromList = fromFoldable
 {-# INLINABLE fromList #-}
+
+fromFoldable :: (Eq k, Hashable k, Foldable f) => f (k, v) -> HashMap k v
+fromFoldable = L.foldl' (\ m (k, v) -> unsafeInsert k v m) empty
+{-# INLINABLE fromFoldable #-}
 
 -- | /O(n*log n)/ Construct a map from a list of elements.  Uses
 -- the provided function @f@ to merge duplicate entries with
@@ -2131,8 +2138,12 @@ fromList = L.foldl' (\ m (k, v) -> unsafeInsert k v m) empty
 -- > fromListWith f [(k, a), (k, b), (k, c), (k, d)]
 -- > = fromList [(k, f d (f c (f b a)))]
 fromListWith :: (Eq k, Hashable k) => (v -> v -> v) -> [(k, v)] -> HashMap k v
-fromListWith f = L.foldl' (\ m (k, v) -> unsafeInsertWith f k v m) empty
+fromListWith = fromFoldableWith
 {-# INLINE fromListWith #-}
+
+fromFoldableWith :: (Eq k, Hashable k, Foldable f) => (v -> v -> v) -> f (k, v) -> HashMap k v
+fromFoldableWith f = L.foldl' (\ m (k, v) -> unsafeInsertWith f k v m) empty
+{-# INLINE fromFoldableWith #-}
 
 -- | /O(n*log n)/ Construct a map from a list of elements.  Uses
 -- the provided function to merge duplicate entries.
@@ -2164,6 +2175,9 @@ fromListWithKey :: (Eq k, Hashable k) => (k -> v -> v -> v) -> [(k, v)] -> HashM
 fromListWithKey f = L.foldl' (\ m (k, v) -> unsafeInsertWithKey f k v m) empty
 {-# INLINE fromListWithKey #-}
 
+fromFoldableWithKey :: (Foldable f, Eq k, Hashable k) => (k -> v -> v -> v) -> f (k, v) -> HashMap k v
+fromFoldableWithKey f = L.foldl' (\ m (k, v) -> unsafeInsertWithKey f k v m) empty
+{-# INLINE fromFoldableWithKey #-}
 ------------------------------------------------------------------------
 -- Array operations
 

@@ -100,7 +100,9 @@ module Data.HashMap.Strict
     , fromList
     , fromListWith
     , fromListWithKey
-
+    , fromFoldable
+    , fromFoldableWith
+    , fromFoldableWithKey
       -- ** HashSets
     , HS.keysSet
     ) where

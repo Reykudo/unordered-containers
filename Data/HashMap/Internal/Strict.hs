@@ -116,6 +116,9 @@ module Data.HashMap.Internal.Strict
     , fromList
     , fromListWith
     , fromListWithKey
+    , fromFoldable
+    , fromFoldableWith
+    , fromFoldableWithKey
     ) where
 
 import Data.Bits ((.&.), (.|.))
@@ -131,6 +134,7 @@ import qualified Data.HashMap.Internal.Array as A
 import qualified Data.HashMap.Internal as HM
 import Data.HashMap.Internal hiding (
     alter, alterF, adjust, fromList, fromListWith, fromListWithKey,
+    fromFoldable, fromFoldableWith, fromFoldableWithKey,
     insert, insertWith,
     differenceWith, intersectionWith, intersectionWithKey, map, mapWithKey,
     mapMaybe, mapMaybeWithKey, singleton, update, unionWith, unionWithKey,
@@ -635,8 +639,12 @@ intersectionWithKey f a b = foldlWithKey' go empty a
 -- list contains duplicate mappings, the later mappings take
 -- precedence.
 fromList :: (Eq k, Hashable k) => [(k, v)] -> HashMap k v
-fromList = L.foldl' (\ m (k, !v) -> HM.unsafeInsert k v m) empty
+fromList = fromFoldable
 {-# INLINABLE fromList #-}
+
+fromFoldable :: (Eq k, Hashable k, Foldable f) => f (k, v) -> HashMap k v
+fromFoldable = L.foldl' (\ m (k, !v) -> HM.unsafeInsert k v m) empty
+{-# INLINABLE fromFoldable #-}
 
 -- | /O(n*log n)/ Construct a map from a list of elements.  Uses
 -- the provided function @f@ to merge duplicate entries with
@@ -669,8 +677,13 @@ fromList = L.foldl' (\ m (k, !v) -> HM.unsafeInsert k v m) empty
 -- > fromListWith f [(k, a), (k, b), (k, c), (k, d)]
 -- > = fromList [(k, f d (f c (f b a)))]
 fromListWith :: (Eq k, Hashable k) => (v -> v -> v) -> [(k, v)] -> HashMap k v
-fromListWith f = L.foldl' (\ m (k, v) -> unsafeInsertWith f k v m) empty
+fromListWith = fromFoldableWith
 {-# INLINE fromListWith #-}
+
+
+fromFoldableWith :: (Eq k, Hashable k, Foldable f) => (v -> v -> v) -> f (k, v) -> HashMap k v
+fromFoldableWith f = L.foldl' (\ m (k, v) -> unsafeInsertWith f k v m) empty
+{-# INLINE fromFoldableWith #-}
 
 -- | /O(n*log n)/ Construct a map from a list of elements.  Uses
 -- the provided function to merge duplicate entries.
@@ -699,8 +712,12 @@ fromListWith f = L.foldl' (\ m (k, v) -> unsafeInsertWith f k v m) empty
 --
 -- @since 0.2.11
 fromListWithKey :: (Eq k, Hashable k) => (k -> v -> v -> v) -> [(k, v)] -> HashMap k v
-fromListWithKey f = L.foldl' (\ m (k, v) -> unsafeInsertWithKey f k v m) empty
+fromListWithKey = fromFoldableWithKey
 {-# INLINE fromListWithKey #-}
+
+fromFoldableWithKey :: (Foldable t, Eq k, Hashable k) => (k -> v -> v -> v) -> t (k, v) -> HashMap k v
+fromFoldableWithKey f = L.foldl' (\ m (k, v) -> unsafeInsertWithKey f k v m) empty
+{-# INLINE fromFoldableWithKey #-}
 
 ------------------------------------------------------------------------
 -- Array operations
